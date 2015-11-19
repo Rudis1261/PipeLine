@@ -18,6 +18,7 @@ class pipeline
     public $timeout = 30;
     public $curlHandles = [];
     public $requestMapping = [];
+    public $startTime;
 
 
     function __construct( $concurrent = 0 )
@@ -43,6 +44,7 @@ class pipeline
             return false;
         }
 
+        $this->startTime = microtime(true);
         $this->generateHandles();
         $this->fetchQueue();
 
@@ -139,6 +141,7 @@ class pipeline
 
     function summary()
     {
+        $endTime = round(microtime(true) - $this->startTime, 2);
         $keys = [];
         $keys['REQUESTS'] = count($this->requests);
         $keys['RESPONSES'] = count($this->responses);
@@ -163,5 +166,7 @@ class pipeline
         foreach($failures as $resCode => $url) {
             echo "FAILURE [" . $resCode . "] :: " . $url . PHP_EOL;
         }
+
+        echo "EXEC TIME :: " . $endTime . "s" . PHP_EOL;
     }
 }
