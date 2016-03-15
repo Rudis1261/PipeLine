@@ -24,7 +24,7 @@ $pipe->addUrl("http://httpbin.org/redirect/1", [ "type" => "redirect" ]);
   Their respective values.
   The context 'request_number' => 1 is always returned
 */
- $pipe->addPostUrl("http://httpbin.org/ip",
+ $pipe->addPostUrl("http://httpbin.org/post",
       ['action' => 'submit', 'name' => 'fred', 'surname' => 'dunfold'],
       ['request_number' => 1]);
 
