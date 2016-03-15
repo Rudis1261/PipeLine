@@ -7,6 +7,33 @@
  * Description: I needed a MultiCurler which only needs to GET stuff fast, without all the possible optional parameters.
  *              But with one exception, I needed to be able to pass in context and on receiving the response. Have this context
  *              for the response to make sense and be processed correctly.
+ *
+ * Example Usage:
+ *
+ * $pipe = new pipeline(100);
+ *
+ * // Add a url with some context, which is returned with the result
+ * $pipe->addUrl(
+ *      "http://httpbin.org/ip", [
+ *          "type" => "ip-address"  // this context is passed back with the response
+ *      ]);
+ *
+ * $pipe->addUrl(
+ *      "http://httpbin.org/redirect/1", [
+ *          "type" => "redirect"   // this context is passed back with the response
+ *      ]);
+ *
+ * NOW Supports post
+ * $pipe->addPostUrl(
+ *      "http://httpbin.org/ip",
+ *      ['action' => 'submit', 'name' => 'fred', 'surname' => 'dunfold'],
+ *      ['request_number' => 1]
+ * );
+ *
+ * $result = $pipe->open();
+ *
+ * # Prints out the summary
+ * $pipe->summary();
  */
 class pipeline
 {
@@ -34,6 +61,16 @@ class pipeline
         return $this->requests[] = [
             "url"     => $url,
             "context" => $context,
+        ];
+    }
+
+    function addPostUrl($url, $postFields = [], $context = [])
+    {
+        return $this->requests[] = [
+            "url"     => $url,
+            "post_fields" => $postFields,
+            "context" => $context,
+            "pipeline_type" => "post"
         ];
     }
 
@@ -124,6 +161,14 @@ class pipeline
             //var_dump("running block! $blockIndex");
             foreach($block as $index => $request){
                 $ch = curl_init();
+
+                // Handle specific request types
+                if (!empty($request['pipeline_type'])) {
+                    if ($request['pipeline_type'] == "post" && !empty($request['post_fields'])) {
+                        curl_setopt($ch, CURLOPT_POST, 1);
+                        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($request['post_fields']));
+                    }
+                }
                 curl_setopt($ch, CURLOPT_URL, $request['url']);
                 curl_setopt($ch, CURLOPT_HEADER, 0);
                 curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
